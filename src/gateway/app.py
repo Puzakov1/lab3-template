@@ -4,6 +4,36 @@ from datetime import datetime as dt
 
 app = Flask(__name__)
 
+status = {
+    "reservation":"OK",
+    "loyalty":"OK",
+    "payment":"OK"
+}
+
+health_urls = {
+    "reservation":"http://reservation:8070/manage/health",
+    "loyalty":"http://loyalty:8050/manage/health",
+    "payment":"http://payment:8060/manage/health"
+}
+
+def check_saved_status(service_name):
+
+    if status[service_name] == "OK":
+        return True
+    
+    if (dt.now() - status[service_name]).total_seconds() < 10:
+        return False
+    
+    health_status = requests.get(health_urls[service_name])
+    
+    if health_status.status_code == 200:
+        status[service_name] = "OK"
+        return True
+    
+    status[service_name] = dt.now()
+    return False
+
+
 
 @app.route('/manage/health', methods=['GET'])
 def health_check():
@@ -176,7 +206,21 @@ def delete_reservation(reservationUid: str):
 def get_loyalty():
     user = request.headers['X-User-Name']
 
-    response = requests.get('http://loyalty:8050/api/v1/loyalty', headers={'X-User-Name': user})
+    loyalty_is_good = check_saved_status("loyalty")
+
+    if not loyalty_is_good:
+        return {}, 503
+    
+    request_count = 0 
+    while request_count < 5:
+        response = requests.get('http://loyalty:8050/api/v1/loyalty', headers={'X-User-Name': user})
+        if response.status_code==200:
+            break
+        request_count+=1
+
+    if response.status_code!=200:
+        status["loyalty"] = dt.now()
+        return {}, 503
 
     return response.json(), 200
 
