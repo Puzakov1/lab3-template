@@ -49,7 +49,7 @@ def circuit_breaker(service, url, headers, method="GET"):
     while (service=="loyalty") and (len(loyalty_queue) > 0):
         action, user = loyalty_queue.pop(0)
         if action == "remove":
-            requests.patch('http://loyalty:8050/api/v1/loyalty/remove', {'X-User-Name': user})
+            requests.patch('http://loyalty:8050/api/v1/loyalty/remove', headers={'X-User-Name': user})
     
     request_count = 0 
     while request_count < 5:
