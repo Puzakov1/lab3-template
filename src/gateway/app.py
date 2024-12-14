@@ -92,9 +92,12 @@ def get_me():
         del res['paymentUid']
         res['payment'] = response.json()
 
-    response = requests.get('http://loyalty:8050/api/v1/loyalty', headers={'X-User-Name': user})
+    response_json = circuit_breaker("loyalty", "http://loyalty:8050/api/v1/loyalty", {'X-User-Name': user})
 
-    loyalty = response.json()
+    if response_json is None:
+        loyalty = {"message":"Loyalty Service unavailable"}
+    else:
+        loyalty = response_json
     result = {
         'reservations': reservations,
         'loyalty': loyalty
