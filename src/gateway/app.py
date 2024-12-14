@@ -34,7 +34,7 @@ def check_saved_status(service_name):
     return False
 
 
-def circuit_breaker(service, url, headers):
+def circuit_breaker(service, url, headers, method="GET"):
     service_is_good = check_saved_status(service)
 
     if not service_is_good:
@@ -44,14 +44,14 @@ def circuit_breaker(service, url, headers):
     while request_count < 5:
         try:
             response = None
-            response = requests.get(url, headers=headers)
-            if response.status_code==200:
+            response = requests.request(method, url, headers=headers)
+            if response.status_code in (200, 204, 404):
                 break
         except:
             pass
         request_count+=1
 
-    if response is None or not response.ok:
+    if response is None or not response.status_code in (200, 204, 404):
         status[service] = dt.now()
         return None
 
@@ -222,11 +222,7 @@ def delete_reservation(reservationUid: str):
 
     response = requests.patch('http://payment:8060/api/v1/payment/' + reservation['paymentUid'])
 
-    response = requests.patch(
-        'http://loyalty:8050/api/v1/loyalty/remove',
-        headers={'X-User-Name': user}
-    )
-
+    response_json = circuit_breaker("loyalty", 'http://loyalty:8050/api/v1/loyalty/remove', {'X-User-Name': user}, "PATCH")
     return {}, 204
 
 
