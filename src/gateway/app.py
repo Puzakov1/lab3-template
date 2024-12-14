@@ -229,7 +229,7 @@ def delete_reservation(reservationUid: str):
 def get_loyalty():
     user = request.headers['X-User-Name']
 
-    response_json = circuit_breaker("loyalty", "http://loyalty:8050/api/v1/loyalty", user)
+    response_json = circuit_breaker("loyalty", "http://loyalty:8050/api/v1/loyalty", {'X-User-Name': user})
     if response_json is None:
         return {"message":"Loyalty Service unavailable"}, 503
     
