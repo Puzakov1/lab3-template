@@ -34,6 +34,29 @@ def check_saved_status(service_name):
     return False
 
 
+def circuit_breaker(service, url, headers):
+    service_is_good = check_saved_status(service)
+
+    if not service_is_good:
+        return None
+
+    request_count = 0 
+    while request_count < 5:
+        try:
+            response = None
+            response = requests.get(url, headers=headers)
+            if response.status_code==200:
+                break
+        except:
+            pass
+        request_count+=1
+
+    if response is None or not response.ok:
+        status[service] = dt.now()
+        return None
+
+    return response.json()
+
 
 @app.route('/manage/health', methods=['GET'])
 def health_check():
@@ -206,27 +229,11 @@ def delete_reservation(reservationUid: str):
 def get_loyalty():
     user = request.headers['X-User-Name']
 
-    loyalty_is_good = check_saved_status("loyalty")
-
-    if not loyalty_is_good:
+    response_json = circuit_breaker("loyalty", "http://loyalty:8050/api/v1/loyalty", user)
+    if response_json is None:
         return {"message":"Loyalty Service unavailable"}, 503
     
-    request_count = 0 
-    while request_count < 5:
-        try:
-            response = None
-            response = requests.get('http://loyalty:8050/api/v1/loyalty', headers={'X-User-Name': user})
-            if response.status_code==200:
-                break
-        except:
-            pass
-        request_count+=1
-
-    if response is None or response.status_code!=200:
-        status["loyalty"] = dt.now()
-        return {"message":"Loyalty Service unavailable"}, 503
-
-    return response.json(), 200
+    return response_json, 200
 
 if __name__ == '__main__':
     app.run(port=8050)
