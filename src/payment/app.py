@@ -49,7 +49,7 @@ def cancel_payment(payment_uuid:str):
 update payment set status = 'CANCELED' where payment_uid = '{payment_uuid}'
 """)
             conn.commit()
-    return "CANCELED", 200
+    return {}, 204
 
 
 @app.route('/api/v1/payment/<payment_uuid>', methods=['GET'])

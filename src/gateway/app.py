@@ -16,6 +16,8 @@ health_urls = {
     "payment":"http://payment:8060/manage/health"
 }
 
+loyalty_queue = []
+
 def check_saved_status(service_name):
 
     if status[service_name] == "OK":
@@ -54,6 +56,10 @@ def circuit_breaker(service, url, headers, method="GET"):
     if response is None or not response.status_code in (200, 204, 404):
         status[service] = dt.now()
         return None
+    while (service=="loyalty") and (len(loyalty_queue) > 0):
+        action, user = loyalty_queue.pop()
+        if action == "remove":
+            requests.patch('http://loyalty:8050/api/v1/loyalty/remove', {'X-User-Name': user})
 
     return response.json()
 
@@ -223,6 +229,8 @@ def delete_reservation(reservationUid: str):
     response = requests.patch('http://payment:8060/api/v1/payment/' + reservation['paymentUid'])
 
     response_json = circuit_breaker("loyalty", 'http://loyalty:8050/api/v1/loyalty/remove', {'X-User-Name': user}, "PATCH")
+    if response_json is None:
+        loyalty_queue.append(("remove", user))
     return {}, 204
 
 
