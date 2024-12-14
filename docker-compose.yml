@@ -1,6 +1,7 @@
 version: "3"
 services:
   postgres:
+    hostname: database
     image: library/postgres:13
     container_name: postgres
     restart: on-failure
@@ -14,7 +15,34 @@ services:
     ports:
       - "5432:5432"
 
-# TODO добавить сервисы
+  gateway:
+    build: src/gateway/
+    container_name: gateway
+    restart: on-failure
+    ports:
+      - "8080:8080"
+
+  payment:
+    build: src/payment/
+    container_name: payment
+    restart: on-failure
+    ports:
+      - "8060:8060"
+
+  loyalty:
+    build: src/loyalty/
+    container_name: loyalty
+    restart: on-failure
+    ports:
+      - "8050:8050"
+
+  reservation:
+    build: src/reservation/
+    container_name: reservation
+    restart: on-failure
+    ports:
+      - "8070:8070"
+
 
 volumes:
   db-data:
