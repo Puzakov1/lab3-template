@@ -213,12 +213,16 @@ def get_loyalty():
     
     request_count = 0 
     while request_count < 5:
-        response = requests.get('http://loyalty:8050/api/v1/loyalty', headers={'X-User-Name': user})
-        if response.status_code==200:
-            break
+        try:
+            response = None
+            response = requests.get('http://loyalty:8050/api/v1/loyalty', headers={'X-User-Name': user})
+            if response.status_code==200:
+                break
+        except:
+            pass
         request_count+=1
 
-    if response.status_code!=200:
+    if response is None or response.status_code!=200:
         status["loyalty"] = dt.now()
         return {}, 503
 
