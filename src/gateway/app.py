@@ -168,8 +168,10 @@ def post_reservations():
         - dt.strptime(body['startDate'], "%Y-%m-%d").date()
     ).days * hotel['price']
 
-    response = requests.get('http://loyalty:8050/api/v1/loyalty', headers={'X-User-Name': user})
-    loyalty = response.json()
+    response_json = circuit_breaker("loyalty", "http://loyalty:8050/api/v1/loyalty", {'X-User-Name': user})
+    if response_json is None:
+        return {}, 503
+    loyalty = response_json
     discount = loyalty['discount']
 
     price_with_discount = int(price * (1 - discount / 100))
