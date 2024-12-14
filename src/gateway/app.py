@@ -23,10 +23,14 @@ def check_saved_status(service_name):
     if status[service_name] == "OK":
         return True
     
-    if (dt.now() - status[service_name]).total_seconds() < 10:
+    if (dt.now() - status[service_name]).total_seconds() < 1:
         return False
     
-    health_status = requests.get(health_urls[service_name])
+    try:
+        health_status = requests.get(health_urls[service_name])
+    except:
+        status[service_name] = dt.now()
+        return False
     
     if health_status.status_code == 200:
         status[service_name] = "OK"
