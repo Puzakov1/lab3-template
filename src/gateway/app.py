@@ -209,7 +209,7 @@ def get_loyalty():
     loyalty_is_good = check_saved_status("loyalty")
 
     if not loyalty_is_good:
-        return {}, 503
+        return {"message":"Loyalty Service unavailable"}, 503
     
     request_count = 0 
     while request_count < 5:
@@ -224,7 +224,7 @@ def get_loyalty():
 
     if response is None or response.status_code!=200:
         status["loyalty"] = dt.now()
-        return {}, 503
+        return {"message":"Loyalty Service unavailable"}, 503
 
     return response.json(), 200
 
