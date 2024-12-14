@@ -95,7 +95,7 @@ def get_me():
     response_json = circuit_breaker("loyalty", "http://loyalty:8050/api/v1/loyalty", {'X-User-Name': user})
 
     if response_json is None:
-        loyalty = {"message":"Loyalty Service unavailable"}
+        loyalty = {}
     else:
         loyalty = response_json
     result = {
