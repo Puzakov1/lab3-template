@@ -170,7 +170,7 @@ def post_reservations():
 
     response_json = circuit_breaker("loyalty", "http://loyalty:8050/api/v1/loyalty", {'X-User-Name': user})
     if response_json is None:
-        return {}, 503
+        return {"message":"Loyalty Service unavailable"}, 503
     loyalty = response_json
     discount = loyalty['discount']
 
